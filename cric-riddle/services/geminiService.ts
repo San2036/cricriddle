@@ -102,7 +102,11 @@ export const geminiService = {
     ) || (process.env.API_KEY as string | undefined);
 
     if (!apiKey) {
-      throw new Error("Gemini API key not set. Define VITE_GEMINI_API_KEY in .env.local or set process.env.API_KEY.");
+      // No API key provided – immediately serve one of the pre-built fallback puzzles.
+      const availableFallback = fallbackPuzzles.find(p => 
+          !excludePlayers.some(excluded => excluded.toLowerCase() === p.playerName.toLowerCase())
+      );
+      return availableFallback || fallbackPuzzles[0];
     }
 
     const ai = new GoogleGenAI({ apiKey });
