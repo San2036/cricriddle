@@ -128,11 +128,11 @@ export const geminiService = {
       `;
 
       const generationPromise = ai.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: infoPrompt,
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: {
+        model: 'gemini-2.5-flash',
+         contents: infoPrompt,
+         config: {
+           responseMimeType: 'application/json',
+           responseSchema: {
             type: Type.OBJECT,
             properties: {
               playerName: { type: Type.STRING },
@@ -150,9 +150,9 @@ export const geminiService = {
         }
       });
       
-      // Increase timeout to 20 seconds for more complex requests
+      // Increase timeout to 40 seconds for more complex requests
       // FIX: Explicitly type infoResponse as GenerateContentResponse to resolve type inference issue.
-      const infoResponse: GenerateContentResponse = await withTimeout(generationPromise, 20000);
+      const infoResponse: GenerateContentResponse = await withTimeout(generationPromise, 40000);
 
       const playerInfo = JSON.parse(infoResponse.text.trim());
       if (!playerInfo.playerName || !Array.isArray(playerInfo.clues) || playerInfo.clues.length !== 5 || !playerInfo.stats) {
