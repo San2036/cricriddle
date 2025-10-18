@@ -2,6 +2,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+// Polyfill for Buffer needed by Azure Storage SDK
+import { Buffer } from 'buffer';
+window.Buffer = Buffer;
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

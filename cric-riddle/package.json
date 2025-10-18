@@ -9,10 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^19.2.0",
+    "@azure/storage-blob": "^12.15.0",
     "@google/genai": "^1.25.0",
+    "buffer": "^6.0.3",
+    "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "@azure/storage-blob": "^12.15.0"
+    "stream-browserify": "^3.0.0",
+    "util": "^0.12.5"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

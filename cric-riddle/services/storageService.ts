@@ -4,41 +4,44 @@ import { azureBlobService } from './azureBlobService';
 const CURRENT_USER_KEY = 'cricRiddle_currentUser';
 const ALL_USERS_KEY_PREFIX = 'cricRiddle_user_';
 
-/**
- * storageService now wraps both localStorage (for offline/quick access) and
- * Azure Blob Storage (for persistence across devices). If the Azure connection
- * string is not configured the service will silently fall back to localStorage.
- */
 export const storageService = {
-  // Current logged in user session (still kept in localStorage for speed)
+  // Session helpers
   setUser: (user: User) => {
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
   },
   getUser: (): User | null => {
-    const userJson = localStorage.getItem(CURRENT_USER_KEY);
-    return userJson ? JSON.parse(userJson) : null;
+    const txt = localStorage.getItem(CURRENT_USER_KEY);
+    return txt ? JSON.parse(txt) : null;
   },
-  clearUser: () => {
-    localStorage.removeItem(CURRENT_USER_KEY);
+  clearUser: () => localStorage.removeItem(CURRENT_USER_KEY),
+
+  // Persistent user data helpers
+  saveUserData: async (user: User): Promise<void> => {
+    try {
+      // Primary: Azure
+      await azureBlobService.saveUserData(user);
+      // Cache locally for faster load/offline use
+      localStorage.setItem(`${ALL_USERS_KEY_PREFIX}${user.username}`, JSON.stringify(user));
+    } catch (err) {
+      console.error('Azure save failed – storing only in localStorage', err);
+      localStorage.setItem(`${ALL_USERS_KEY_PREFIX}${user.username}`, JSON.stringify(user));
+    }
   },
 
-  // All user data storage
-  saveUserData: async (user: User) => {
-    // Save to localStorage for offline support
-    localStorage.setItem(`${ALL_USERS_KEY_PREFIX}${user.username}`, JSON.stringify(user));
-    // Persist to Azure (ignore errors)
-    await azureBlobService.saveUserData(user);
-  },
   getUserData: async (username: string): Promise<User | null> => {
-    // Try Azure first
-    const azureUser = await azureBlobService.getUserData(username);
-    if (azureUser) {
-      // Mirror to localStorage for quick subsequent loads
-      localStorage.setItem(`${ALL_USERS_KEY_PREFIX}${username}`, JSON.stringify(azureUser));
-      return azureUser;
+    // Try Azure first; on error, fall back to localStorage
+    try {
+      const user = await azureBlobService.getUserData(username);
+      if (user) {
+        // update cache
+        localStorage.setItem(`${ALL_USERS_KEY_PREFIX}${username}`, JSON.stringify(user));
+        return user;
+      }
+    } catch (err) {
+      console.warn('Azure fetch failed – falling back to localStorage', err);
     }
-    // Fallback to localStorage
-    const userJson = localStorage.getItem(`${ALL_USERS_KEY_PREFIX}${username}`);
-    return userJson ? JSON.parse(userJson) : null;
+
+    const cached = localStorage.getItem(`${ALL_USERS_KEY_PREFIX}${username}`);
+    return cached ? JSON.parse(cached) : null;
   },
 };
