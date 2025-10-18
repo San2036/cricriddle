@@ -3,9 +3,10 @@ import React, { useState } from 'react';
 interface LoginScreenProps {
   onLogin: (username: string) => void;
   switchToRegister: () => void;
+  errorMessage?: string | null;
 }
 
-const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, switchToRegister }) => {
+const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, switchToRegister, errorMessage }) => {
   const [username, setUsername] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -56,6 +57,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, switchToRegister }) 
               <button onClick={switchToRegister} className="text-emerald-400 hover:underline">Register</button>
             </p>
        </div>
+       {errorMessage && <p className="text-red-400 text-sm">{errorMessage}</p>}
     </div>
   );
 };

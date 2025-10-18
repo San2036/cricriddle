@@ -9,6 +9,8 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [registerError, setRegisterError] = useState<string | null>(null);
 
   useEffect(() => {
     const loggedInUser = storageService.getUser();
@@ -23,20 +25,9 @@ const App: React.FC = () => {
     if (existingUser) {
       setUser(existingUser);
       storageService.setUser(existingUser);
+      setLoginError(null); // clear any previous error
     } else {
-      const newUser: User = {
-        username,
-        stats: {
-          gamesPlayed: 0,
-          gamesWon: 0,
-          currentStreak: 0,
-          maxStreak: 0,
-        },
-        history: [],
-      };
-      setUser(newUser);
-      storageService.saveUserData(newUser);
-      storageService.setUser(newUser);
+      setLoginError('User not registered. Please register first.');
     }
   }, []);
 
@@ -54,8 +45,7 @@ const App: React.FC = () => {
   const handleRegister = useCallback(async (username: string) => {
     const existing = await storageService.getUserData(username);
     if (existing) {
-      // If username exists, just switch to login
-      setAuthMode('login');
+      setRegisterError('Username already exists.');
       return;
     }
 
@@ -72,6 +62,7 @@ const App: React.FC = () => {
     await storageService.saveUserData(newUser);
     storageService.setUser(newUser);
     setUser(newUser);
+    setRegisterError(null);
   }, []);
 
   if (loading) {
@@ -87,9 +78,9 @@ const App: React.FC = () => {
       {user ? (
         <GameScreen user={user} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />
       ) : authMode === 'login' ? (
-        <LoginScreen onLogin={handleLogin} switchToRegister={() => setAuthMode('register')} />
+        <LoginScreen onLogin={handleLogin} switchToRegister={() => { setLoginError(null); setAuthMode('register'); }} errorMessage={loginError} />
       ) : (
-        <RegisterScreen onRegister={handleRegister} switchToLogin={() => setAuthMode('login')} />
+        <RegisterScreen onRegister={handleRegister} switchToLogin={() => { setRegisterError(null); setAuthMode('login'); }} errorMessage={registerError} />
       )}
     </div>
   );

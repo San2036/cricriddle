@@ -33,7 +33,26 @@ const downloadText = async (blobName: string): Promise<string | null> => {
   const blob = client.getBlobClient(blobName);
   if (!(await blob.exists())) return null;
   const resp = await blob.download();
-  return await resp.blobBody?.text() || null;
+  // Handle both Promise<Blob> and Blob cases
+  if (resp.blobBody) {
+    const blobData = resp.blobBody instanceof Promise ? await resp.blobBody : resp.blobBody;
+    // The Blob API has a text() helper that returns the string content
+    return await blobData.text();
+  }
+  // Fallback: if blobBody is not available, try to read via readableStreamBody
+  if (resp.readableStreamBody) {
+    const reader = resp.readableStreamBody.getReader();
+    const decoder = new TextDecoder();
+    let text = "";
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      text += decoder.decode(value, { stream: true });
+    }
+    text += decoder.decode();
+    return text;
+  }
+  return null;
 };
 
 const uploadJson = async (blobName: string, data: unknown) => {

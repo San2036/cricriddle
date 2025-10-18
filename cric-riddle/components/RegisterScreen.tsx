@@ -3,11 +3,12 @@ import React, { useState } from "react";
 interface RegisterScreenProps {
   onRegister: (username: string) => void;
   switchToLogin: () => void;
+  errorMessage?: string | null;
 }
 
-const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegister, switchToLogin }) => {
+const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegister, switchToLogin, errorMessage }) => {
   const [username, setUsername] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(errorMessage ?? null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +34,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegister, switchToLog
         </div>
 
         {error && <p className="text-red-400 text-sm">{error}</p>}
+        {!error && errorMessage && <p className="text-red-400 text-sm">{errorMessage}</p>}
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div>
